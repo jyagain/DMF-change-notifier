@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMF 문서번호 변경 알림 센터 | 의약품안전나라 모니터링</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header Navigation -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-file-medical"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>DMF <span>Notify</span></h1>
+                    <p>원료의약품 문서번호 모니터링 시스템</p>
+                </div>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="btn btn-outline" id="btnCheckNow">
+                    <i class="fa-solid fa-rotate-right"></i> 지금 변경 확인
+                </button>
+                <button class="btn btn-primary" id="btnOpenSearch">
+                    <i class="fa-solid fa-plus"></i> 관심 DMF 추가
+                </button>
+                <button class="btn btn-icon" id="btnOpenSettings" title="알림 및 시스템 설정">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="dashboard-content">
+            <!-- Stats Overview Row -->
+            <section class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">모니터링 원료의약품</span>
+                        <h3 id="statTotalItems">0</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon emerald">
+                        <i class="fa-solid fa-bell-concierge"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">감지된 문서번호 변경</span>
+                        <h3 id="statTotalChanges">0</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">마지막 동기화 시각</span>
+                        <h3 id="statLastSync">-</h3>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon amber">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">데이터 출처</span>
+                        <h3>nedrug.mfds.go.kr</h3>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Grid Layout: Monitored Items & Change Timeline -->
+            <div class="grid-layout">
+                <!-- Left Panel: Watchlist -->
+                <section class="panel watchlist-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-eye"></i>
+                            <h2>모니터링 등록 목록</h2>
+                        </div>
+                        <span class="badge badge-info" id="watchCountBadge">0개 품목</span>
+                    </div>
+
+                    <div class="watchlist-container" id="watchlistContainer">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <p>현재 모니터링 중인 원료의약품이 없습니다.</p>
+                            <button class="btn btn-sm btn-primary" onclick="openSearchModal()">관심 DMF 검색 및 추가</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Panel: Change History Log Timeline -->
+                <section class="panel log-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-timeline"></i>
+                            <h2>문서번호 변경 이력 타임라인</h2>
+                        </div>
+                    </div>
+
+                    <div class="timeline-container" id="timelineContainer">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-inbox"></i>
+                            <p>아직 변경 이력이 기록되지 않았습니다.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Search Modal -->
+        <div class="modal-overlay" id="searchModal">
+            <div class="modal-card wide">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-magnifying-glass"></i> 의약품안전나라 DMF 검색 & 등록</h3>
+                    <button class="btn-close" id="btnCloseSearch"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="searchForm" class="search-box-form">
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-pills"></i> 성분명</label>
+                            <input type="text" id="inputIngredient" placeholder="예: 피나스테리드, 탐스로신">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-hashtag"></i> 등록번호</label>
+                            <input type="text" id="inputRegNo" placeholder="예: 20250623-94-E-188-16(A)">
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-building"></i> 신청인명</label>
+                            <input type="text" id="inputApplicant" placeholder="예: 리더스바이오">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-search-submit">
+                            <i class="fa-solid fa-search"></i> 검색
+                        </button>
+                    </form>
+
+                    <div class="search-results-wrapper">
+                        <div id="searchLoading" class="loading-spinner hidden">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                            <span>의약품안전나라에서 검색 중...</span>
+                        </div>
+                        <div id="searchResults" class="search-results-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal-overlay" id="settingsModal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-sliders"></i> 알림 및 수신 설정</h3>
+                    <button class="btn-close" id="btnCloseSettings"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="settingsForm">
+                        <div class="settings-section">
+                            <h4><i class="fa-solid fa-envelope"></i> 이메일 알림 설정</h4>
+                            <div class="form-row toggle-row">
+                                <label for="emailEnabled">이메일 알림 사용</label>
+                                <input type="checkbox" id="emailEnabled">
+                            </div>
+                            <div class="form-row">
+                                <label>수신 이메일 주소</label>
+                                <input type="email" id="emailRecipient" placeholder="user@example.com">
+                            </div>
+                            <div class="form-row-grid">
+                                <div class="form-row">
+                                    <label>SMTP 서버</label>
+                                    <input type="text" id="smtpServer" placeholder="smtp.gmail.com">
+                                </div>
+                                <div class="form-row">
+                                    <label>SMTP 포트</label>
+                                    <input type="number" id="smtpPort" placeholder="587">
+                                </div>
+                            </div>
+                            <div class="form-row-grid">
+                                <div class="form-row">
+                                    <label>SMTP 계정</label>
+                                    <input type="text" id="smtpUser" placeholder="id@gmail.com">
+                                </div>
+                                <div class="form-row">
+                                    <label>SMTP 비밀번호 / 앱비밀번호</label>
+                                    <input type="password" id="smtpPassword" placeholder="••••••••">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="fa-solid fa-mobile-screen"></i> 문자 / 알림톡 설정</h4>
+                            <div class="form-row toggle-row">
+                                <label for="smsEnabled">문자 알림 사용</label>
+                                <input type="checkbox" id="smsEnabled">
+                            </div>
+                            <div class="form-row">
+                                <label>수신 휴대폰 번호</label>
+                                <input type="tel" id="smsPhone" placeholder="010-1234-5678">
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="fa-solid fa-clock"></i> 자동 모니터링 주기</h4>
+                            <div class="form-row">
+                                <label>검사 주기 (분)</label>
+                                <input type="number" id="checkInterval" min="5" value="60">
+                                <small class="form-help">기본 60분 간격으로 nedrug.mfds.go.kr 데이터를 자동 동기화합니다.</small>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer-actions">
+                            <button type="button" class="btn btn-outline" id="btnTestNotify">
+                                <i class="fa-solid fa-paper-plane"></i> 알림 테스트 발송
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-floppy-disk"></i> 설정 저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
